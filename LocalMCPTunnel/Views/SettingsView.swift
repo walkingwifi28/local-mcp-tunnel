@@ -3,6 +3,9 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var saveButtonState: SaveButtonState = .idle
+    @State private var saveResetTask: Task<Void, Never>?
 
     var body: some View {
         Form {
@@ -70,25 +73,104 @@ struct SettingsView: View {
             }
 
             HStack {
-                if let saveMessage = settings.saveMessage {
+                if let saveMessage = settings.saveMessage,
+                   !saveMessage.hasPrefix("設定を保存しました") {
                     Text(saveMessage)
                         .font(.caption)
-                        .foregroundStyle(
-                            saveMessage.hasPrefix("設定を")
-                                ? Color.secondary
-                                : Color.red
-                        )
+                        .foregroundStyle(.red)
                 }
                 Spacer()
-                Button("保存") {
-                    settings.save()
-                }
-                .keyboardShortcut("s", modifiers: .command)
+                saveButton
             }
         }
         .formStyle(.grouped)
         .padding()
         .frame(width: 660, height: 680)
+        .onDisappear {
+            saveResetTask?.cancel()
+        }
+    }
+
+    private var saveButton: some View {
+        Button(action: saveSettings) {
+            ZStack {
+                saveButtonFace(for: .idle) {
+                    Text("保存")
+                }
+
+                saveButtonFace(for: .saving, tone: .secondary) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("保存中…")
+                }
+
+                saveButtonFace(for: .success, tone: .green) {
+                    Image(systemName: "checkmark")
+                        .fontWeight(.semibold)
+                    Text("保存しました")
+                }
+
+                saveButtonFace(for: .failure, tone: .red) {
+                    Image(systemName: "exclamationmark")
+                        .fontWeight(.semibold)
+                    Text("再試行")
+                }
+            }
+            .frame(minWidth: 112, minHeight: 18)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.regular)
+        .disabled(saveButtonState == .saving)
+        .keyboardShortcut("s", modifiers: .command)
+        .accessibilityLabel(saveButtonState.accessibilityLabel)
+    }
+
+    private func saveButtonFace<Content: View>(
+        for state: SaveButtonState,
+        tone: Color = .primary,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(spacing: 6) {
+            content()
+        }
+        .foregroundStyle(tone)
+        .opacity(saveButtonState == state ? 1 : 0)
+        .offset(y: reduceMotion || saveButtonState == state ? 0 : 3)
+        .blur(radius: reduceMotion || saveButtonState == state ? 0 : 2)
+        .animation(saveAnimation, value: saveButtonState)
+        .accessibilityHidden(saveButtonState != state)
+    }
+
+    private var saveAnimation: Animation? {
+        reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.82)
+    }
+
+    private func saveSettings() {
+        guard saveButtonState != .saving else { return }
+
+        saveResetTask?.cancel()
+        settings.clearSaveMessage()
+
+        withAnimation(saveAnimation) {
+            saveButtonState = .saving
+        }
+
+        let didSave = settings.save()
+        saveResetTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(420))
+            guard !Task.isCancelled else { return }
+
+            withAnimation(saveAnimation) {
+                saveButtonState = didSave ? .success : .failure
+            }
+
+            try? await Task.sleep(for: .milliseconds(didSave ? 1000 : 2200))
+            guard !Task.isCancelled else { return }
+
+            withAnimation(saveAnimation) {
+                saveButtonState = .idle
+            }
+        }
     }
 
     private func chooseWorkingDirectory() {
@@ -112,6 +194,26 @@ struct SettingsView: View {
         panel.directoryURL = URL(fileURLWithPath: ShellPathResolver.expanded(settings.workingDirectory))
         if panel.runModal() == .OK {
             settings.addAllowedDirectories(panel.urls.map(\.path))
+        }
+    }
+
+    private enum SaveButtonState {
+        case idle
+        case saving
+        case success
+        case failure
+
+        var accessibilityLabel: String {
+            switch self {
+            case .idle:
+                return "設定を保存"
+            case .saving:
+                return "設定を保存中"
+            case .success:
+                return "設定を保存しました"
+            case .failure:
+                return "設定の保存に失敗しました。再試行"
+            }
         }
     }
 }
