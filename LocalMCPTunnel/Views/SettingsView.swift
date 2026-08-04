@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var saveButtonState: SaveButtonState = .idle
     @State private var saveResetTask: Task<Void, Never>?
+    @StateObject private var updateService = AppUpdateService()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -66,6 +67,8 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                updateSection
+
                 Section("実行環境") {
                     HStack {
                         TextField("Working Directory", text: $settings.workingDirectory)
@@ -79,8 +82,91 @@ struct SettingsView: View {
             saveFooter
         }
         .frame(width: 660, height: 680)
+        .task {
+            updateService.checkForUpdatesIfNeeded()
+        }
         .onDisappear {
             saveResetTask?.cancel()
+        }
+    }
+
+    @ViewBuilder
+    private var updateSection: some View {
+        Section("アプリの更新") {
+            LabeledContent("現在のバージョン") {
+                Text("v\(updateService.currentVersion)")
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(alignment: .center, spacing: 12) {
+                updateStatus
+                Spacer(minLength: 12)
+                updateButton
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatus: some View {
+        switch updateService.state {
+        case .idle:
+            Text("GitHub Releaseから最新版を確認します。")
+                .foregroundStyle(.secondary)
+        case .checking:
+            Label("更新を確認中…", systemImage: "arrow.triangle.2.circlepath")
+                .foregroundStyle(.secondary)
+        case .upToDate(let latestVersion):
+            Label("最新バージョンです（v\(latestVersion)）。", systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        case .updateAvailable(let release):
+            Label("v\(release.version) が利用できます。", systemImage: "arrow.down.circle.fill")
+        case .downloading(let release):
+            Label("v\(release.version) をダウンロード・検証中…", systemImage: "arrow.down.circle")
+                .foregroundStyle(.secondary)
+        case .installing(let release):
+            Label("v\(release.version) をインストール中。完了後に再起動します…", systemImage: "gearshape.2")
+                .foregroundStyle(.secondary)
+        case .failed(let message):
+            Label(message, systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.red)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var updateButton: some View {
+        Button(action: handleUpdateButton) {
+            HStack(spacing: 6) {
+                if updateService.isBusy {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+                Text(updateButtonTitle)
+            }
+            .frame(minWidth: 108)
+        }
+        .disabled(updateService.isBusy)
+    }
+
+    private var updateButtonTitle: String {
+        switch updateService.state {
+        case .updateAvailable(let release):
+            return "v\(release.version)に更新"
+        case .checking:
+            return "確認中…"
+        case .downloading:
+            return "取得中…"
+        case .installing:
+            return "更新中…"
+        case .idle, .upToDate, .failed:
+            return "更新を確認"
+        }
+    }
+
+    private func handleUpdateButton() {
+        if case .updateAvailable = updateService.state {
+            updateService.installAvailableUpdate()
+        } else {
+            updateService.checkForUpdates()
         }
     }
 

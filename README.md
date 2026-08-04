@@ -34,6 +34,17 @@ open /Applications/Local\ MCP\ Tunnel.app
 brew uninstall --cask local-mcp-tunnel
 ```
 
+## アプリ内更新
+
+設定画面の「アプリの更新」でGitHub Releaseの最新版を確認できます。更新がある場合は、表示された更新ボタンを押すと次の処理を行います。
+
+1. Apple Silicon arm64向けZIPとSHA-256ファイルをダウンロード
+2. SHA-256、Bundle ID、バージョン、コード署名を検証
+3. アプリ終了後に現在の`.app`を新しいバージョンへ差し替え
+4. 更新後のアプリを自動で再起動
+
+更新には、現在のアプリが保存されているフォルダへの書き込み権限が必要です。通常は`/Applications/Local MCP Tunnel.app`へインストールして使用してください。
+
 ## 対応コマンド
 
 ```bash

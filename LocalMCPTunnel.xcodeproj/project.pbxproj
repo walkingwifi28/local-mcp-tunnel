@@ -20,6 +20,7 @@
 		A1000000000000000000000A /* LogTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* LogTextView.swift */; };
 		A1000000000000000000000B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* SettingsView.swift */; };
 		A1000000000000000000000C /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* Security.framework */; };
+		A1000000000000000000000D /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* AppUpdateService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,7 @@
 		A2000000000000000000000C /* LocalMCPTunnel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LocalMCPTunnel.entitlements; sourceTree = "<group>"; };
 		A2000000000000000000000D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		A2000000000000000000000E /* Local MCP Tunnel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Local MCP Tunnel.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2000000000000000000000F /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +101,7 @@
 			children = (
 				A20000000000000000000006 /* CLIController.swift */,
 				A20000000000000000000007 /* KeychainStore.swift */,
+				A2000000000000000000000F /* AppUpdateService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -217,6 +220,7 @@
 				A10000000000000000000009 /* ContentView.swift in Sources */,
 				A1000000000000000000000A /* LogTextView.swift in Sources */,
 				A1000000000000000000000B /* SettingsView.swift in Sources */,
+				A1000000000000000000000D /* AppUpdateService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
