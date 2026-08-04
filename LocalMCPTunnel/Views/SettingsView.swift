@@ -147,12 +147,6 @@ struct SettingsView: View {
                     Text("確認中…")
                 }
 
-                animatedButtonFace(isVisible: updateButtonState == .upToDate) {
-                    Image(systemName: "checkmark")
-                        .fontWeight(.semibold)
-                    Text("最新バージョンです")
-                }
-
                 animatedButtonFace(isVisible: updateButtonState == .updateAvailable) {
                     Image(systemName: "arrow.down")
                         .fontWeight(.semibold)
@@ -201,7 +195,7 @@ struct SettingsView: View {
         case .checking:
             return .checking
         case .upToDate:
-            return .upToDate
+            return .idle
         case .updateAvailable:
             return .updateAvailable
         case .downloading:
@@ -224,7 +218,7 @@ struct SettingsView: View {
         switch updateButtonState {
         case .failure:
             return Color(red: 112 / 255, green: 48 / 255, blue: 48 / 255)
-        case .idle, .checking, .upToDate, .updateAvailable, .downloading, .installing:
+        case .idle, .checking, .updateAvailable, .downloading, .installing:
             return Color(red: 60 / 255, green: 62 / 255, blue: 64 / 255)
         }
     }
@@ -405,7 +399,6 @@ struct SettingsView: View {
     private enum UpdateButtonState: Equatable {
         case idle
         case checking
-        case upToDate
         case updateAvailable
         case downloading
         case installing
