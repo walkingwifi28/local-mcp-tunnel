@@ -8,87 +8,98 @@ struct SettingsView: View {
     @State private var saveResetTask: Task<Void, Never>?
 
     var body: some View {
-        Form {
-            Section("Tunnel") {
-                TextField("Profile Name", text: $settings.profileName)
-                TextField("Tunnel ID", text: $settings.tunnelID)
-                TextField("Sample Name", text: $settings.sampleName)
-                TextField("tunnel-client", text: $settings.tunnelClientExecutable)
-                SecureField("CONTROL_PLANE_API_KEY", text: $settings.controlPlaneAPIKey)
-            }
+        VStack(spacing: 0) {
+            Form {
+                Section("Tunnel") {
+                    TextField("Profile Name", text: $settings.profileName)
+                    TextField("Tunnel ID", text: $settings.tunnelID)
+                    TextField("Sample Name", text: $settings.sampleName)
+                    TextField("tunnel-client", text: $settings.tunnelClientExecutable)
+                    SecureField("CONTROL_PLANE_API_KEY", text: $settings.controlPlaneAPIKey)
+                }
 
-            Section("local-mcp") {
-                TextField("Session ID", text: $settings.sessionID)
-                TextField("local-mcp", text: $settings.localMCPExecutable)
-                TextField("MCP Command", text: $settings.mcpCommand)
-            }
+                Section("local-mcp") {
+                    TextField("Session ID", text: $settings.sessionID)
+                    TextField("local-mcp", text: $settings.localMCPExecutable)
+                    TextField("MCP Command", text: $settings.mcpCommand)
+                }
 
-            Section("起動時に自動Allow") {
-                if settings.allowedDirectories.isEmpty {
-                    Text("登録されているディレクトリはありません。")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(settings.allowedDirectories, id: \.self) { directory in
-                        HStack(spacing: 10) {
-                            Image(systemName: "folder")
-                                .foregroundStyle(.secondary)
-                            Text(directory)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                                .help(directory)
-                            Spacer()
-                            Button {
-                                settings.removeAllowedDirectory(directory)
-                            } label: {
-                                Image(systemName: "trash")
+                Section("起動時に自動Allow") {
+                    if settings.allowedDirectories.isEmpty {
+                        Text("登録されているディレクトリはありません。")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(settings.allowedDirectories, id: \.self) { directory in
+                            HStack(spacing: 10) {
+                                Image(systemName: "folder")
+                                    .foregroundStyle(.secondary)
+                                Text(directory)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                    .help(directory)
+                                Spacer()
+                                Button {
+                                    settings.removeAllowedDirectory(directory)
+                                } label: {
+                                    Image(systemName: "trash")
+                                }
+                                .buttonStyle(.borderless)
+                                .help("このディレクトリを削除")
                             }
-                            .buttonStyle(.borderless)
-                            .help("このディレクトリを削除")
                         }
                     }
-                }
 
-                HStack {
-                    Button("ディレクトリを追加…") {
-                        chooseAllowedDirectories()
-                    }
-                    if !settings.allowedDirectories.isEmpty {
-                        Button("すべて削除", role: .destructive) {
-                            settings.allowedDirectories.removeAll()
+                    HStack {
+                        Button("ディレクトリを追加…") {
+                            chooseAllowedDirectories()
                         }
+                        if !settings.allowedDirectories.isEmpty {
+                            Button("すべて削除", role: .destructive) {
+                                settings.allowedDirectories.removeAll()
+                            }
+                        }
+                        Spacer()
                     }
-                    Spacer()
-                }
 
-                Text("local-mcpのStart直後に、登録した各ディレクトリへ /permission allow を自動送信します。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("実行環境") {
-                HStack {
-                    TextField("Working Directory", text: $settings.workingDirectory)
-                    Button("選択") { chooseWorkingDirectory() }
-                }
-            }
-
-            HStack {
-                if let saveMessage = settings.saveMessage,
-                   !saveMessage.hasPrefix("設定を保存しました") {
-                    Text(saveMessage)
+                    Text("local-mcpのStart直後に、登録した各ディレクトリへ /permission allow を自動送信します。")
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(.secondary)
                 }
-                Spacer()
-                saveButton
+
+                Section("実行環境") {
+                    HStack {
+                        TextField("Working Directory", text: $settings.workingDirectory)
+                        Button("選択") { chooseWorkingDirectory() }
+                    }
+                }
             }
+            .formStyle(.grouped)
+            .padding()
+
+            saveFooter
         }
-        .formStyle(.grouped)
-        .padding()
         .frame(width: 660, height: 680)
         .onDisappear {
             saveResetTask?.cancel()
         }
+    }
+
+    private var saveFooter: some View {
+        HStack(spacing: 12) {
+            if let saveMessage = settings.saveMessage,
+               !saveMessage.hasPrefix("設定を保存しました") {
+                Text(saveMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 12)
+            saveButton
+        }
+        .padding(.horizontal, 13)
+        .frame(height: 53)
+        .background(Color(red: 35 / 255, green: 40 / 255, blue: 42 / 255))
     }
 
     private var saveButton: some View {
@@ -98,42 +109,56 @@ struct SettingsView: View {
                     Text("保存")
                 }
 
-                saveButtonFace(for: .saving, tone: .secondary) {
+                saveButtonFace(for: .saving) {
                     ProgressView()
                         .controlSize(.small)
+                        .tint(.white)
                     Text("保存中…")
                 }
 
-                saveButtonFace(for: .success, tone: .green) {
+                saveButtonFace(for: .success) {
                     Image(systemName: "checkmark")
                         .fontWeight(.semibold)
                     Text("保存しました")
                 }
 
-                saveButtonFace(for: .failure, tone: .red) {
+                saveButtonFace(for: .failure) {
                     Image(systemName: "exclamationmark")
                         .fontWeight(.semibold)
                     Text("再試行")
                 }
             }
-            .frame(minWidth: 112, minHeight: 18)
+            .font(.system(size: 13, weight: .regular))
+            .foregroundStyle(.white)
+            .frame(width: 136, height: 26)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(saveButtonBackground)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
-        .buttonStyle(.bordered)
-        .controlSize(.regular)
+        .buttonStyle(.plain)
         .disabled(saveButtonState == .saving)
         .keyboardShortcut("s", modifiers: .command)
         .accessibilityLabel(saveButtonState.accessibilityLabel)
     }
 
+    private var saveButtonBackground: Color {
+        switch saveButtonState {
+        case .failure:
+            return Color(red: 112 / 255, green: 48 / 255, blue: 48 / 255)
+        case .idle, .saving, .success:
+            return Color(red: 60 / 255, green: 62 / 255, blue: 64 / 255)
+        }
+    }
+
     private func saveButtonFace<Content: View>(
         for state: SaveButtonState,
-        tone: Color = .primary,
         @ViewBuilder content: () -> Content
     ) -> some View {
         HStack(spacing: 6) {
             content()
         }
-        .foregroundStyle(tone)
         .opacity(saveButtonState == state ? 1 : 0)
         .offset(y: reduceMotion || saveButtonState == state ? 0 : 3)
         .blur(radius: reduceMotion || saveButtonState == state ? 0 : 2)
