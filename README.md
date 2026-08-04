@@ -5,6 +5,34 @@
 - 対応CPU: Apple Silicon（arm64）のみ
 - 対応OS: macOS 14 Sonoma以降
 
+## インストール
+
+Homebrew Caskからインストールします。
+
+```bash
+brew tap walkingwifi28/local-mcp-tunnel https://github.com/walkingwifi28/local-mcp-tunnel.git
+brew install --cask local-mcp-tunnel
+```
+
+起動します。
+
+```bash
+open /Applications/LocalMCPTunnelApp.app
+```
+
+現在の自動ReleaseはDeveloper ID署名・Apple公証を設定していない場合、ad hoc署名で公開されます。Gatekeeperで起動を止められた場合は、Finderでアプリを右クリックして「開く」を選択してください。それでも起動できない場合はquarantine属性を削除します。
+
+```bash
+xattr -dr com.apple.quarantine /Applications/LocalMCPTunnelApp.app
+open /Applications/LocalMCPTunnelApp.app
+```
+
+アンインストール:
+
+```bash
+brew uninstall --cask local-mcp-tunnel
+```
+
 ## 対応コマンド
 
 ```bash
@@ -37,7 +65,7 @@ local-mcp起動後、以下を標準入力へ送信できます。
 open LocalMCPTunnelApp.xcodeproj
 ```
 
-### ビルド確認
+### Debugビルド確認
 
 ```bash
 ./Scripts/verify-build.sh
@@ -49,110 +77,96 @@ XcodeのCommand Line Toolsだけが選択されている場合は、Xcode本体�
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ```
 
-## Homebrew Cask配布
+## リリースフロー
 
-GUIアプリのため、Homebrew FormulaではなくHomebrew Caskとして配布します。
+`v*`タグをpushすると、`.github/workflows/macos-release.yml`が次の処理を自動実行します。
 
-### 1. Apple Silicon用リリースZIPを作る
+1. シェルスクリプトの構文検証
+2. Apple Silicon arm64向けReleaseビルド
+3. `.app`のZIP化
+4. SHA-256ファイルの生成と再検証
+5. GitHub Releaseの作成とZIP・SHA-256の添付
+6. このリポジトリの`Casks/local-mcp-tunnel.rb`を更新
+7. CaskのRuby構文検証、デフォルトブランチへのcommit・push
+
+### Homebrew tapの構成
+
+参照リポジトリと同様に、このリポジトリ自体をHomebrew tapとして利用します。別の`homebrew-tap`リポジトリや専用Personal Access Tokenは不要です。workflowの`GITHUB_TOKEN`と`contents: write`権限で、同じリポジトリの`Casks/local-mcp-tunnel.rb`を更新します。
+
+リポジトリ名が`homebrew-`で始まらないため、利用者は`brew tap`時にGit URLを明示します。
+
+```bash
+brew tap walkingwifi28/local-mcp-tunnel https://github.com/walkingwifi28/local-mcp-tunnel.git
+```
+
+Homebrewで一般公開するには、GitHub ReleaseのZIPへ認証なしでアクセスできる必要があるため、このリポジトリをpublicにしてください。デフォルトブランチに直接pushできないブランチ保護を設定している場合は、GitHub Actionsからのpushを許可するか、Pull Request方式へ変更する必要があります。
+
+### 公開方法
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+生成物:
+
+```text
+Local-MCP-Tunnel-1.0.0-arm64.zip
+Local-MCP-Tunnel-1.0.0-arm64.zip.sha256
+```
+
+Release URL:
+
+```text
+https://github.com/walkingwifi28/local-mcp-tunnel/releases/download/v1.0.0/Local-MCP-Tunnel-1.0.0-arm64.zip
+```
+
+### ローカルでReleaseパッケージを作る
 
 ```bash
 ./Scripts/build-release.sh 1.0.0
 ```
 
-以下が生成されます。
+生成物は`dist/`へ出力されます。スクリプトは次も検証します。
 
-```text
-dist/Local-MCP-Tunnel-1.0.0-arm64.zip
-dist/Local-MCP-Tunnel-1.0.0-arm64.zip.sha256
-```
+- 実行バイナリがarm64のみであること
+- `CFBundleShortVersionString`が指定バージョンと一致すること
+- app bundleのコード署名が検証できること
 
-スクリプトは実行ファイルが`arm64`のみであることも検証します。
-
-### 2. ローカルでHomebrewインストールを確認する
-
-`build-release.sh`の最後に表示されるSHA-256を使い、ローカル用Caskを生成します。
+### ローカルCask生成
 
 ```bash
-SHA256="$(shasum -a 256 dist/Local-MCP-Tunnel-1.0.0-arm64.zip | awk '{print $1}')"
+VERSION=1.0.0
+ARCHIVE="dist/Local-MCP-Tunnel-${VERSION}-arm64.zip"
+SHA256="$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')"
 
 ./Scripts/generate-cask.sh \
-  1.0.0 \
+  "$VERSION" \
   "$SHA256" \
-  "file://$(pwd)/dist/Local-MCP-Tunnel-1.0.0-arm64.zip" \
+  "file://$(pwd)/$ARCHIVE" \
   dist/local-mcp-tunnel.rb \
-  "https://github.com/OWNER/REPO"
+  "https://github.com/walkingwifi28/local-mcp-tunnel"
 
+ruby -c dist/local-mcp-tunnel.rb
 brew install --cask "$(pwd)/dist/local-mcp-tunnel.rb"
 ```
 
-アンインストールは次のとおりです。
+## workflow・スクリプトの検証
 
 ```bash
-brew uninstall --cask local-mcp-tunnel
+bash -n Scripts/*.sh
+ruby -e 'require "yaml"; YAML.load_file(".github/workflows/macos-release.yml"); puts "workflow YAML OK"'
 ```
 
-### 3. GitHub ReleaseへZIPを公開する
-
-GitHub Releaseのタグを`v1.0.0`、添付ファイル名を次の名前にします。
-
-```text
-Local-MCP-Tunnel-1.0.0-arm64.zip
-```
-
-公開URLの形式は次のようになります。
-
-```text
-https://github.com/OWNER/REPO/releases/download/v1.0.0/Local-MCP-Tunnel-1.0.0-arm64.zip
-```
-
-### 4. 公開用Caskを生成する
+`actionlint`がインストールされている場合は、GitHub Actions固有の構文も検証できます。
 
 ```bash
-SHA256="$(shasum -a 256 dist/Local-MCP-Tunnel-1.0.0-arm64.zip | awk '{print $1}')"
-
-./Scripts/generate-cask.sh \
-  1.0.0 \
-  "$SHA256" \
-  "https://github.com/OWNER/REPO/releases/download/v1.0.0/Local-MCP-Tunnel-1.0.0-arm64.zip" \
-  Casks/local-mcp-tunnel.rb \
-  "https://github.com/OWNER/REPO"
+actionlint .github/workflows/macos-release.yml
 ```
 
-生成された`Casks/local-mcp-tunnel.rb`を、`homebrew-tap`リポジトリの`Casks`ディレクトリへ配置します。
+## Developer ID署名・Apple公証
 
-```text
-homebrew-tap/
-└── Casks/
-    └── local-mcp-tunnel.rb
-```
-
-利用者は次の2コマンドでインストールできます。
-
-```bash
-brew tap OWNER/tap
-brew install --cask local-mcp-tunnel
-```
-
-または1コマンドでインストールできます。
-
-```bash
-brew install --cask OWNER/tap/local-mcp-tunnel
-```
-
-## 署名・公証付きリリース
-
-一般公開する場合は、Developer ID Application証明書で署名し、Appleの公証を通すことを推奨します。
-
-まず、`notarytool`用の資格情報をKeychainへ保存します。
-
-```bash
-xcrun notarytool store-credentials local-mcp-tunnel-notary \
-  --apple-id "APPLE_ID" \
-  --team-id "TEAM_ID" \
-  --password "APP_SPECIFIC_PASSWORD"
-```
-
-次に、環境変数を指定してリリースを作成します。
+`Scripts/build-release.sh`は次の環境変数に対応しています。
 
 ```bash
 DEVELOPER_ID_APPLICATION="Developer ID Application: COMPANY NAME (TEAM_ID)" \
@@ -160,4 +174,11 @@ NOTARYTOOL_PROFILE="local-mcp-tunnel-notary" \
 ./Scripts/build-release.sh 1.0.0
 ```
 
-署名だけを行い、公証を省略する場合は`NOTARYTOOL_PROFILE`を指定しません。
+`NOTARYTOOL_PROFILE`を指定する場合は、事前にKeychainへ資格情報を保存します。
+
+```bash
+xcrun notarytool store-credentials local-mcp-tunnel-notary \
+  --apple-id "APPLE_ID" \
+  --team-id "TEAM_ID" \
+  --password "APP_SPECIFIC_PASSWORD"
+```

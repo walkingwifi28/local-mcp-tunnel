@@ -4,7 +4,18 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
-VERSION="${1:-1.0.0}"
+VERSION="${1:-}"
+if [[ -z "$VERSION" ]]; then
+  echo "Usage: ./Scripts/build-release.sh <version>" >&2
+  exit 1
+fi
+
+if [[ ! "$VERSION" =~ ^[0-9]+([.][0-9]+){1,2}([.-][0-9A-Za-z.-]+)*$ ]]; then
+  echo "Error: invalid version: $VERSION" >&2
+  exit 1
+fi
+
+BUILD_NUMBER="${GITHUB_RUN_NUMBER:-1}"
 BUILD_ROOT="$ROOT_DIR/.build/release"
 DERIVED_DATA="$BUILD_ROOT/DerivedData"
 DIST_DIR="$ROOT_DIR/dist"
@@ -12,6 +23,7 @@ APP_NAME="LocalMCPTunnelApp.app"
 APP_PATH="$DERIVED_DATA/Build/Products/Release/$APP_NAME"
 ARCHIVE_NAME="Local-MCP-Tunnel-${VERSION}-arm64.zip"
 ARCHIVE_PATH="$DIST_DIR/$ARCHIVE_NAME"
+CHECKSUM_PATH="$ARCHIVE_PATH.sha256"
 
 rm -rf "$BUILD_ROOT" "$DIST_DIR"
 mkdir -p "$BUILD_ROOT" "$DIST_DIR"
@@ -24,7 +36,11 @@ xcodebuild \
   -derivedDataPath "$DERIVED_DATA" \
   ARCHS=arm64 \
   ONLY_ACTIVE_ARCH=NO \
+  MARKETING_VERSION="$VERSION" \
+  CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
   CODE_SIGNING_ALLOWED=NO \
+  CODE_SIGNING_REQUIRED=NO \
+  CODE_SIGN_IDENTITY="" \
   clean build
 
 if [[ ! -d "$APP_PATH" ]]; then
@@ -32,20 +48,30 @@ if [[ ! -d "$APP_PATH" ]]; then
   exit 1
 fi
 
-EXECUTABLE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP_PATH/Contents/Info.plist")"
+INFO_PLIST="$APP_PATH/Contents/Info.plist"
+EXECUTABLE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$INFO_PLIST")"
 EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/$EXECUTABLE_NAME"
-BINARY_ARCHS="$(lipo -archs "$EXECUTABLE_PATH")"
 
+if [[ ! -f "$EXECUTABLE_PATH" ]]; then
+  echo "Error: executable not found: $EXECUTABLE_PATH" >&2
+  exit 1
+fi
+
+BINARY_ARCHS="$(lipo -archs "$EXECUTABLE_PATH")"
 if [[ "$BINARY_ARCHS" != "arm64" ]]; then
   echo "Error: expected arm64-only binary, got: $BINARY_ARCHS" >&2
   exit 1
 fi
 
-# Public distribution should use a Developer ID Application certificate.
-# Example:
-#   DEVELOPER_ID_APPLICATION='Developer ID Application: Example Inc. (TEAMID)' \
-#   NOTARYTOOL_PROFILE='local-mcp-tunnel-notary' \
-#   ./Scripts/build-release.sh 1.0.0
+PLIST_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")"
+if [[ "$PLIST_VERSION" != "$VERSION" ]]; then
+  echo "Error: expected app version $VERSION, got: $PLIST_VERSION" >&2
+  exit 1
+fi
+
+# Public distribution can provide a Developer ID Application identity and an
+# optional notarytool Keychain profile. Without them, create an ad hoc-signed
+# build like the reference project's preview release flow.
 if [[ -n "${DEVELOPER_ID_APPLICATION:-}" ]]; then
   codesign \
     --force \
@@ -54,9 +80,11 @@ if [[ -n "${DEVELOPER_ID_APPLICATION:-}" ]]; then
     --timestamp \
     --sign "$DEVELOPER_ID_APPLICATION" \
     "$APP_PATH"
-
-  codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+else
+  codesign --force --deep --sign - "$APP_PATH"
 fi
+
+codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
 ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ARCHIVE_PATH"
 
@@ -76,21 +104,15 @@ if [[ -n "${NOTARYTOOL_PROFILE:-}" ]]; then
 fi
 
 SHA256="$(shasum -a 256 "$ARCHIVE_PATH" | awk '{print $1}')"
-printf '%s  %s\n' "$SHA256" "$ARCHIVE_NAME" > "$ARCHIVE_PATH.sha256"
+printf '%s  %s\n' "$SHA256" "$ARCHIVE_NAME" > "$CHECKSUM_PATH"
 
 cat <<EOF
 Release package created.
 
 Version:      $VERSION
+Build:        $BUILD_NUMBER
 Architecture: $BINARY_ARCHS
 Archive:      $ARCHIVE_PATH
+Checksum:     $CHECKSUM_PATH
 SHA-256:      $SHA256
-
-Local Homebrew test:
-  ./Scripts/generate-cask.sh \\
-    "$VERSION" \\
-    "$SHA256" \\
-    "file://$ARCHIVE_PATH" \\
-    "$DIST_DIR/local-mcp-tunnel.rb"
-  brew install --cask "$DIST_DIR/local-mcp-tunnel.rb"
 EOF
