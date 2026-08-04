@@ -135,30 +135,116 @@ struct SettingsView: View {
 
     private var updateButton: some View {
         Button(action: handleUpdateButton) {
-            HStack(spacing: 6) {
-                if updateService.isBusy {
+            ZStack {
+                animatedButtonFace(isVisible: updateButtonState == .idle) {
+                    Text("更新を確認")
+                }
+
+                animatedButtonFace(isVisible: updateButtonState == .checking) {
                     ProgressView()
                         .controlSize(.small)
+                        .tint(.white)
+                    Text("確認中…")
                 }
-                Text(updateButtonTitle)
+
+                animatedButtonFace(isVisible: updateButtonState == .upToDate) {
+                    Image(systemName: "checkmark")
+                        .fontWeight(.semibold)
+                    Text("最新です")
+                }
+
+                animatedButtonFace(isVisible: updateButtonState == .updateAvailable) {
+                    Image(systemName: "arrow.down")
+                        .fontWeight(.semibold)
+                    Text(updateAvailableButtonTitle)
+                }
+
+                animatedButtonFace(isVisible: updateButtonState == .downloading) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.white)
+                    Text("取得中…")
+                }
+
+                animatedButtonFace(isVisible: updateButtonState == .installing) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.white)
+                    Text("更新中…")
+                }
+
+                animatedButtonFace(isVisible: updateButtonState == .failure) {
+                    Image(systemName: "exclamationmark")
+                        .fontWeight(.semibold)
+                    Text("再試行")
+                }
             }
-            .frame(minWidth: 108)
+            .font(.system(size: 13, weight: .regular))
+            .foregroundStyle(.white)
+            .frame(width: 136, height: 26)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(updateButtonBackground)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .animation(saveAnimation, value: updateButtonState)
         }
+        .buttonStyle(.plain)
         .disabled(updateService.isBusy)
+        .accessibilityLabel(updateButtonAccessibilityLabel)
     }
 
-    private var updateButtonTitle: String {
+    private var updateButtonState: UpdateButtonState {
         switch updateService.state {
-        case .updateAvailable(let release):
-            return "v\(release.version)に更新"
+        case .idle:
+            return .idle
         case .checking:
-            return "確認中…"
+            return .checking
+        case .upToDate:
+            return .upToDate
+        case .updateAvailable:
+            return .updateAvailable
         case .downloading:
-            return "取得中…"
+            return .downloading
         case .installing:
-            return "更新中…"
-        case .idle, .upToDate, .failed:
-            return "更新を確認"
+            return .installing
+        case .failed:
+            return .failure
+        }
+    }
+
+    private var updateAvailableButtonTitle: String {
+        guard case .updateAvailable(let release) = updateService.state else {
+            return "更新する"
+        }
+        return "v\(release.version)に更新"
+    }
+
+    private var updateButtonBackground: Color {
+        switch updateButtonState {
+        case .failure:
+            return Color(red: 112 / 255, green: 48 / 255, blue: 48 / 255)
+        case .idle, .checking, .upToDate, .updateAvailable, .downloading, .installing:
+            return Color(red: 60 / 255, green: 62 / 255, blue: 64 / 255)
+        }
+    }
+
+    private var updateButtonAccessibilityLabel: String {
+        switch updateService.state {
+        case .idle:
+            return "アプリの更新を確認"
+        case .checking:
+            return "アプリの更新を確認中"
+        case .upToDate:
+            return "アプリは最新です。もう一度更新を確認"
+        case .updateAvailable(let release):
+            return "バージョン\(release.version)へ更新"
+        case .downloading:
+            return "アプリの更新をダウンロード中"
+        case .installing:
+            return "アプリを更新中"
+        case .failed:
+            return "アプリの更新に失敗しました。再試行"
         }
     }
 
@@ -242,14 +328,21 @@ struct SettingsView: View {
         for state: SaveButtonState,
         @ViewBuilder content: () -> Content
     ) -> some View {
+        animatedButtonFace(isVisible: saveButtonState == state, content: content)
+            .animation(saveAnimation, value: saveButtonState)
+    }
+
+    private func animatedButtonFace<Content: View>(
+        isVisible: Bool,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
         HStack(spacing: 6) {
             content()
         }
-        .opacity(saveButtonState == state ? 1 : 0)
-        .offset(y: reduceMotion || saveButtonState == state ? 0 : 3)
-        .blur(radius: reduceMotion || saveButtonState == state ? 0 : 2)
-        .animation(saveAnimation, value: saveButtonState)
-        .accessibilityHidden(saveButtonState != state)
+        .opacity(isVisible ? 1 : 0)
+        .offset(y: reduceMotion || isVisible ? 0 : 3)
+        .blur(radius: reduceMotion || isVisible ? 0 : 2)
+        .accessibilityHidden(!isVisible)
     }
 
     private var saveAnimation: Animation? {
@@ -306,6 +399,17 @@ struct SettingsView: View {
         if panel.runModal() == .OK {
             settings.addAllowedDirectories(panel.urls.map(\.path))
         }
+    }
+
+
+    private enum UpdateButtonState: Equatable {
+        case idle
+        case checking
+        case upToDate
+        case updateAvailable
+        case downloading
+        case installing
+        case failure
     }
 
     private enum SaveButtonState {
