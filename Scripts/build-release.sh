@@ -19,7 +19,7 @@ BUILD_NUMBER="${GITHUB_RUN_NUMBER:-1}"
 BUILD_ROOT="$ROOT_DIR/.build/release"
 DERIVED_DATA="$BUILD_ROOT/DerivedData"
 DIST_DIR="$ROOT_DIR/dist"
-APP_NAME="LocalMCPTunnelApp.app"
+APP_NAME="Local MCP Tunnel.app"
 APP_PATH="$DERIVED_DATA/Build/Products/Release/$APP_NAME"
 ARCHIVE_NAME="Local-MCP-Tunnel-${VERSION}-arm64.zip"
 ARCHIVE_PATH="$DIST_DIR/$ARCHIVE_NAME"
@@ -29,8 +29,8 @@ rm -rf "$BUILD_ROOT" "$DIST_DIR"
 mkdir -p "$BUILD_ROOT" "$DIST_DIR"
 
 xcodebuild \
-  -project LocalMCPTunnelApp.xcodeproj \
-  -scheme LocalMCPTunnelApp \
+  -project LocalMCPTunnel.xcodeproj \
+  -scheme LocalMCPTunnel \
   -configuration Release \
   -destination 'platform=macOS,arch=arm64' \
   -derivedDataPath "$DERIVED_DATA" \

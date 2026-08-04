@@ -60,15 +60,17 @@ cask "local-mcp-tunnel" do
   depends_on arch: :arm64
   depends_on macos: ">= :sonoma"
 
-  app "LocalMCPTunnelApp.app"
+  app "Local MCP Tunnel.app"
 
   caveats <<~EOS
     This build is ad hoc signed but is not Apple notarized.
     If macOS blocks the app on first launch, run:
-      xattr -dr com.apple.quarantine /Applications/LocalMCPTunnelApp.app
+      xattr -dr com.apple.quarantine /Applications/Local\ MCP\ Tunnel.app
   EOS
 
   zap trash: [
+    "~/Library/Preferences/jp.co.walkingwifi.LocalMCPTunnel.plist",
+    "~/Library/Saved Application State/jp.co.walkingwifi.LocalMCPTunnel.savedState",
     "~/Library/Preferences/jp.co.varista.LocalMCPTunnelApp.plist",
     "~/Library/Saved Application State/jp.co.varista.LocalMCPTunnelApp.savedState",
   ]

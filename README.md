@@ -1,4 +1,4 @@
-# Local MCP Tunnel App
+# Local MCP Tunnel
 
 `tunnel-client`と`local-mcp`をSwiftUIから操作するmacOSアプリです。
 
@@ -11,20 +11,21 @@ Homebrew Caskからインストールします。
 
 ```bash
 brew tap walkingwifi28/local-mcp-tunnel https://github.com/walkingwifi28/local-mcp-tunnel.git
+brew trust --cask walkingwifi28/local-mcp-tunnel/local-mcp-tunnel
 brew install --cask local-mcp-tunnel
 ```
 
 起動します。
 
 ```bash
-open /Applications/LocalMCPTunnelApp.app
+open /Applications/Local\ MCP\ Tunnel.app
 ```
 
 現在の自動ReleaseはDeveloper ID署名・Apple公証を設定していない場合、ad hoc署名で公開されます。Gatekeeperで起動を止められた場合は、Finderでアプリを右クリックして「開く」を選択してください。それでも起動できない場合はquarantine属性を削除します。
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/LocalMCPTunnelApp.app
-open /Applications/LocalMCPTunnelApp.app
+xattr -dr com.apple.quarantine /Applications/Local\ MCP\ Tunnel.app
+open /Applications/Local\ MCP\ Tunnel.app
 ```
 
 アンインストール:
@@ -62,7 +63,7 @@ local-mcp起動後、以下を標準入力へ送信できます。
 ## 開発
 
 ```bash
-open LocalMCPTunnelApp.xcodeproj
+open LocalMCPTunnel.xcodeproj
 ```
 
 ### Debugビルド確認

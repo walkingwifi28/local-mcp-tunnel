@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0D59C8603021889D001A7FBD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D59C85F3021889D001A7FBD /* Assets.xcassets */; };
-		A10000000000000000000001 /* LocalMCPTunnelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* LocalMCPTunnelApp.swift */; };
+		A10000000000000000000001 /* LocalMCPTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* LocalMCPTunnel.swift */; };
 		A10000000000000000000002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppDelegate.swift */; };
 		A10000000000000000000003 /* CLIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* CLIConfiguration.swift */; };
 		A10000000000000000000004 /* PermissionCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* PermissionCommand.swift */; };
@@ -24,7 +24,7 @@
 
 /* Begin PBXFileReference section */
 		0D59C85F3021889D001A7FBD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A20000000000000000000001 /* LocalMCPTunnelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalMCPTunnelApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000001 /* LocalMCPTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalMCPTunnel.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A20000000000000000000003 /* CLIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIConfiguration.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* PermissionCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionCommand.swift; sourceTree = "<group>"; };
@@ -35,9 +35,9 @@
 		A20000000000000000000009 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* LogTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogTextView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		A2000000000000000000000C /* LocalMCPTunnelApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LocalMCPTunnelApp.entitlements; sourceTree = "<group>"; };
+		A2000000000000000000000C /* LocalMCPTunnel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LocalMCPTunnel.entitlements; sourceTree = "<group>"; };
 		A2000000000000000000000D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		A2000000000000000000000E /* LocalMCPTunnelApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocalMCPTunnelApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2000000000000000000000E /* Local MCP Tunnel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Local MCP Tunnel.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,13 +55,13 @@
 		A40000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
-				A40000000000000000000002 /* LocalMCPTunnelApp */,
+				A40000000000000000000002 /* LocalMCPTunnel */,
 				A40000000000000000000008 /* Frameworks */,
 				A40000000000000000000009 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		A40000000000000000000002 /* LocalMCPTunnelApp */ = {
+		A40000000000000000000002 /* LocalMCPTunnel */ = {
 			isa = PBXGroup;
 			children = (
 				A40000000000000000000003 /* App */,
@@ -69,16 +69,16 @@
 				A40000000000000000000005 /* Services */,
 				A40000000000000000000006 /* Utilities */,
 				A40000000000000000000007 /* Views */,
-				A2000000000000000000000C /* LocalMCPTunnelApp.entitlements */,
+				A2000000000000000000000C /* LocalMCPTunnel.entitlements */,
 				0D59C85F3021889D001A7FBD /* Assets.xcassets */,
 			);
-			path = LocalMCPTunnelApp;
+			path = LocalMCPTunnel;
 			sourceTree = "<group>";
 		};
 		A40000000000000000000003 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000001 /* LocalMCPTunnelApp.swift */,
+				A20000000000000000000001 /* LocalMCPTunnel.swift */,
 				A20000000000000000000002 /* AppDelegate.swift */,
 			);
 			path = App;
@@ -132,7 +132,7 @@
 		A40000000000000000000009 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A2000000000000000000000E /* LocalMCPTunnelApp.app */,
+				A2000000000000000000000E /* Local MCP Tunnel.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -140,9 +140,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A50000000000000000000001 /* LocalMCPTunnelApp */ = {
+		A50000000000000000000001 /* LocalMCPTunnel */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A90000000000000000000002 /* Build configuration list for PBXNativeTarget "LocalMCPTunnelApp" */;
+			buildConfigurationList = A90000000000000000000002 /* Build configuration list for PBXNativeTarget "LocalMCPTunnel" */;
 			buildPhases = (
 				A60000000000000000000001 /* Sources */,
 				A30000000000000000000001 /* Frameworks */,
@@ -152,9 +152,9 @@
 			);
 			dependencies = (
 			);
-			name = LocalMCPTunnelApp;
-			productName = LocalMCPTunnelApp;
-			productReference = A2000000000000000000000E /* LocalMCPTunnelApp.app */;
+			name = LocalMCPTunnel;
+			productName = "Local MCP Tunnel";
+			productReference = A2000000000000000000000E /* Local MCP Tunnel.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -172,7 +172,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A90000000000000000000001 /* Build configuration list for PBXProject "LocalMCPTunnelApp" */;
+			buildConfigurationList = A90000000000000000000001 /* Build configuration list for PBXProject "LocalMCPTunnel" */;
 			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -185,7 +185,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A50000000000000000000001 /* LocalMCPTunnelApp */,
+				A50000000000000000000001 /* LocalMCPTunnel */,
 			);
 		};
 /* End PBXProject section */
@@ -206,7 +206,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000001 /* LocalMCPTunnelApp.swift in Sources */,
+				A10000000000000000000001 /* LocalMCPTunnel.swift in Sources */,
 				A10000000000000000000002 /* AppDelegate.swift in Sources */,
 				A10000000000000000000003 /* CLIConfiguration.swift in Sources */,
 				A10000000000000000000004 /* PermissionCommand.swift in Sources */,
@@ -266,7 +266,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = LocalMCPTunnelApp/LocalMCPTunnelApp.entitlements;
+				CODE_SIGN_ENTITLEMENTS = LocalMCPTunnel/LocalMCPTunnel.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -282,8 +282,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = jp.co.varista.LocalMCPTunnelApp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = jp.co.walkingwifi.LocalMCPTunnel;
+				PRODUCT_NAME = "Local MCP Tunnel";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
@@ -297,7 +297,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = LocalMCPTunnelApp/LocalMCPTunnelApp.entitlements;
+				CODE_SIGN_ENTITLEMENTS = LocalMCPTunnel/LocalMCPTunnel.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -312,8 +312,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = jp.co.varista.LocalMCPTunnelApp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = jp.co.walkingwifi.LocalMCPTunnel;
+				PRODUCT_NAME = "Local MCP Tunnel";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
@@ -323,7 +323,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A90000000000000000000001 /* Build configuration list for PBXProject "LocalMCPTunnelApp" */ = {
+		A90000000000000000000001 /* Build configuration list for PBXProject "LocalMCPTunnel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA0000000000000000000001 /* Debug */,
@@ -332,7 +332,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A90000000000000000000002 /* Build configuration list for PBXNativeTarget "LocalMCPTunnelApp" */ = {
+		A90000000000000000000002 /* Build configuration list for PBXNativeTarget "LocalMCPTunnel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA0000000000000000000003 /* Debug */,
