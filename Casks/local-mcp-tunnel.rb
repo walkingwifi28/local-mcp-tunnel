@@ -1,8 +1,8 @@
 cask "local-mcp-tunnel" do
-  version "0.1.6"
-  sha256 "cae5ba6df643084d302aac1e4f29a986e06b1777f2b29b68748cd5267d798027"
+  version "0.1.7"
+  sha256 "43acd183c6bb1dcfbece628a4afe6975782cfe5674696d16c3dd3af78dc93821"
 
-  url "https://github.com/walkingwifi28/local-mcp-tunnel/releases/download/v0.1.6/Local-MCP-Tunnel-0.1.6-arm64.zip"
+  url "https://github.com/walkingwifi28/local-mcp-tunnel/releases/download/v0.1.7/Local-MCP-Tunnel-0.1.7-arm64.zip"
   name "Local MCP Tunnel"
   desc "GUI for controlling tunnel-client and local-mcp"
   homepage "https://github.com/walkingwifi28/local-mcp-tunnel"
