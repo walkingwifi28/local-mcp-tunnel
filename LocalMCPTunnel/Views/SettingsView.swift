@@ -148,9 +148,7 @@ struct SettingsView: View {
                 }
 
                 animatedButtonFace(isVisible: updateButtonState == .upToDate) {
-                    Image(systemName: "checkmark")
-                        .fontWeight(.semibold)
-                    Text("最新です")
+                    Text("更新を確認")
                 }
 
                 animatedButtonFace(isVisible: updateButtonState == .updateAvailable) {
