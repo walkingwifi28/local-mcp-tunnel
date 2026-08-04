@@ -6,6 +6,8 @@ struct SettingsView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var saveButtonState: SaveButtonState = .idle
     @State private var saveResetTask: Task<Void, Never>?
+    @State private var updateButtonState: UpdateButtonState = .idle
+    @State private var updateButtonResetTask: Task<Void, Never>?
     @StateObject private var updateService = AppUpdateService()
 
     var body: some View {
@@ -85,8 +87,12 @@ struct SettingsView: View {
         .task {
             updateService.checkForUpdatesIfNeeded()
         }
+        .onChange(of: updateService.state) { _, newState in
+            handleUpdateServiceStateChange(newState)
+        }
         .onDisappear {
             saveResetTask?.cancel()
+            updateButtonResetTask?.cancel()
         }
     }
 
@@ -147,6 +153,12 @@ struct SettingsView: View {
                     Text("確認中…")
                 }
 
+                animatedButtonFace(isVisible: updateButtonState == .upToDate) {
+                    Image(systemName: "checkmark")
+                        .fontWeight(.semibold)
+                    Text("最新です")
+                }
+
                 animatedButtonFace(isVisible: updateButtonState == .updateAvailable) {
                     Image(systemName: "arrow.down")
                         .fontWeight(.semibold)
@@ -184,27 +196,8 @@ struct SettingsView: View {
             .animation(saveAnimation, value: updateButtonState)
         }
         .buttonStyle(.plain)
-        .disabled(updateService.isBusy)
+        .disabled(updateService.isBusy || updateButtonState == .upToDate)
         .accessibilityLabel(updateButtonAccessibilityLabel)
-    }
-
-    private var updateButtonState: UpdateButtonState {
-        switch updateService.state {
-        case .idle:
-            return .idle
-        case .checking:
-            return .checking
-        case .upToDate:
-            return .idle
-        case .updateAvailable:
-            return .updateAvailable
-        case .downloading:
-            return .downloading
-        case .installing:
-            return .installing
-        case .failed:
-            return .failure
-        }
     }
 
     private var updateAvailableButtonTitle: String {
@@ -218,26 +211,29 @@ struct SettingsView: View {
         switch updateButtonState {
         case .failure:
             return Color(red: 112 / 255, green: 48 / 255, blue: 48 / 255)
-        case .idle, .checking, .updateAvailable, .downloading, .installing:
+        case .idle, .checking, .upToDate, .updateAvailable, .downloading, .installing:
             return Color(red: 60 / 255, green: 62 / 255, blue: 64 / 255)
         }
     }
 
     private var updateButtonAccessibilityLabel: String {
-        switch updateService.state {
+        switch updateButtonState {
         case .idle:
             return "アプリの更新を確認"
         case .checking:
             return "アプリの更新を確認中"
         case .upToDate:
-            return "アプリは最新です。もう一度更新を確認"
-        case .updateAvailable(let release):
-            return "バージョン\(release.version)へ更新"
+            return "アプリは最新です"
+        case .updateAvailable:
+            if case .updateAvailable(let release) = updateService.state {
+                return "バージョン\(release.version)へ更新"
+            }
+            return "アプリを更新"
         case .downloading:
             return "アプリの更新をダウンロード中"
         case .installing:
             return "アプリを更新中"
-        case .failed:
+        case .failure:
             return "アプリの更新に失敗しました。再試行"
         }
     }
@@ -247,6 +243,43 @@ struct SettingsView: View {
             updateService.installAvailableUpdate()
         } else {
             updateService.checkForUpdates()
+        }
+    }
+
+    private func handleUpdateServiceStateChange(_ state: AppUpdateService.State) {
+        updateButtonResetTask?.cancel()
+
+        let nextState: UpdateButtonState
+        switch state {
+        case .idle:
+            nextState = .idle
+        case .checking:
+            nextState = .checking
+        case .upToDate:
+            nextState = .upToDate
+        case .updateAvailable:
+            nextState = .updateAvailable
+        case .downloading:
+            nextState = .downloading
+        case .installing:
+            nextState = .installing
+        case .failed:
+            nextState = .failure
+        }
+
+        withAnimation(saveAnimation) {
+            updateButtonState = nextState
+        }
+
+        guard nextState == .upToDate else { return }
+
+        updateButtonResetTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled, case .upToDate = updateService.state else { return }
+
+            withAnimation(saveAnimation) {
+                updateButtonState = .idle
+            }
         }
     }
 
@@ -399,6 +432,7 @@ struct SettingsView: View {
     private enum UpdateButtonState: Equatable {
         case idle
         case checking
+        case upToDate
         case updateAvailable
         case downloading
         case installing

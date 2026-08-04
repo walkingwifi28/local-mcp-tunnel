@@ -52,14 +52,20 @@ final class AppUpdateService: ObservableObject {
         state = .checking
 
         Task {
+            let clock = ContinuousClock()
+            let minimumLoadingEnd = clock.now.advanced(by: .milliseconds(500))
+
             do {
                 let release = try await fetchLatestRelease()
+                try? await clock.sleep(until: minimumLoadingEnd)
+
                 if Self.isVersion(release.version, newerThan: currentVersion) {
                     state = .updateAvailable(release)
                 } else {
                     state = .upToDate(latestVersion: release.version)
                 }
             } catch {
+                try? await clock.sleep(until: minimumLoadingEnd)
                 state = .failed(Self.userMessage(for: error))
             }
         }
