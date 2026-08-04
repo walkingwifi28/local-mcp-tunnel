@@ -1,0 +1,10 @@
+.DS_Store
+.build/
+dist/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.home/
+.share-chat.html
+.share-stream.txt
+LocalMCPTunnelApp/ChatGPT Image 2026年8月4日 11_34_40.png
