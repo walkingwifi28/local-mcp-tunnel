@@ -10,6 +10,10 @@ final class CLIController: ObservableObject {
     @Published private(set) var permissionMode: PermissionMode = .ask
     @Published var presentedError: String?
 
+    private enum DefaultsKeys {
+        static let permissionMode = "permissionMode"
+    }
+
     enum LogSource: String, CaseIterable, Identifiable {
         case tunnel
         case localMCP
@@ -32,6 +36,12 @@ final class CLIController: ObservableObject {
     private var tunnelStopRequested = false
     private var localMCPStopRequested = false
     private var redactedValues: [String] = []
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        permissionMode = PermissionMode(rawValue: defaults.string(forKey: DefaultsKeys.permissionMode) ?? "") ?? .ask
+    }
 
     func initializeTunnel(using configuration: CLIConfiguration) {
         guard validate(configuration), initializationProcess == nil, tunnelProcess == nil else { return }
@@ -125,7 +135,6 @@ final class CLIController: ObservableObject {
             let arguments = ["start", configuration.sessionID]
             appendLog("[local-mcp] \(displayCommand(executable: executable.path, arguments: arguments))", to: .localMCP)
             localMCPState = .starting
-            permissionMode = .ask
             localMCPStopRequested = false
 
             let process = try ManagedProcess(
@@ -141,12 +150,12 @@ final class CLIController: ObservableObject {
                     let wasRequested = self.localMCPStopRequested
                     self.localMCPStopRequested = false
                     self.localMCPState = (wasRequested || status == 0) ? .stopped : .failed("終了コード: \(status)")
-                    self.permissionMode = .ask
                 }
             )
             localMCPProcess = process
             try process.start()
             localMCPState = .running(processIdentifier: process.processIdentifier)
+            applyPermissionMode(to: process)
             applyAllowedDirectories(configuration.normalizedAllowedDirectories, to: process)
         } catch {
             localMCPProcess = nil
@@ -230,15 +239,14 @@ final class CLIController: ObservableObject {
         localMCPProcess = nil
         tunnelState = .stopped
         localMCPState = .stopped
-        permissionMode = .ask
     }
 
     private func updatePermissionModeIfNeeded(for command: PermissionCommand) {
         switch command {
         case .ask:
-            permissionMode = .ask
+            setPermissionMode(.ask)
         case .yolo:
-            permissionMode = .yolo
+            setPermissionMode(.yolo)
         case .allow, .revoke, .list, .status:
             break
         }
@@ -247,11 +255,28 @@ final class CLIController: ObservableObject {
     private func updatePermissionModeIfNeeded(for input: String) {
         switch input.trimmingCharacters(in: .whitespacesAndNewlines) {
         case PermissionCommand.ask.commandLine:
-            permissionMode = .ask
+            setPermissionMode(.ask)
         case PermissionCommand.yolo.commandLine:
-            permissionMode = .yolo
+            setPermissionMode(.yolo)
         default:
             break
+        }
+    }
+
+    private func setPermissionMode(_ mode: PermissionMode) {
+        permissionMode = mode
+        defaults.set(mode.rawValue, forKey: DefaultsKeys.permissionMode)
+    }
+
+    private func applyPermissionMode(to process: ManagedProcess) {
+        let command: PermissionCommand = permissionMode == .yolo ? .yolo : .ask
+        appendLog("[local-mcp] 保存済みのPermission Mode（\(permissionMode.label)）を適用します。", to: .localMCP)
+        do {
+            try process.send(command.commandLine)
+            appendLog("[local-mcp:stdin] \(command.commandLine)", to: .localMCP)
+        } catch {
+            appendLog("[error] Permission Modeの自動適用に失敗しました: \(error.localizedDescription)", to: .localMCP)
+            presentedError = "Permission Modeの自動適用に失敗しました。"
         }
     }
 
