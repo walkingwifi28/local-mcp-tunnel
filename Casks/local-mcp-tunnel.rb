@@ -1,8 +1,8 @@
 cask "local-mcp-tunnel" do
-  version "0.1.0"
-  sha256 "01589e7918006b6c93e8e85e6bb46bf0250638dd7d243c1fae1e399d3865f729"
+  version "0.1.1"
+  sha256 "edc89142bb3dd2cf069f98717b754dd6500adb48d54379c494a7d0b7d8e85453"
 
-  url "https://github.com/walkingwifi28/local-mcp-tunnel/releases/download/v0.1.0/Local-MCP-Tunnel-0.1.0-arm64.zip"
+  url "https://github.com/walkingwifi28/local-mcp-tunnel/releases/download/v0.1.1/Local-MCP-Tunnel-0.1.1-arm64.zip"
   name "Local MCP Tunnel"
   desc "GUI for controlling tunnel-client and local-mcp"
   homepage "https://github.com/walkingwifi28/local-mcp-tunnel"
@@ -16,15 +16,17 @@ cask "local-mcp-tunnel" do
   depends_on arch: :arm64
   depends_on macos: ">= :sonoma"
 
-  app "LocalMCPTunnelApp.app"
+  app "Local MCP Tunnel.app"
 
   caveats <<~EOS
     This build is ad hoc signed but is not Apple notarized.
     If macOS blocks the app on first launch, run:
-      xattr -dr com.apple.quarantine /Applications/LocalMCPTunnelApp.app
+      xattr -dr com.apple.quarantine /Applications/Local\ MCP\ Tunnel.app
   EOS
 
   zap trash: [
+    "~/Library/Preferences/jp.co.walkingwifi.LocalMCPTunnel.plist",
+    "~/Library/Saved Application State/jp.co.walkingwifi.LocalMCPTunnel.savedState",
     "~/Library/Preferences/jp.co.varista.LocalMCPTunnelApp.plist",
     "~/Library/Saved Application State/jp.co.varista.LocalMCPTunnelApp.savedState",
   ]
