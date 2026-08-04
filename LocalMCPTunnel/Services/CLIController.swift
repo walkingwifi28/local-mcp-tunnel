@@ -8,6 +8,7 @@ final class CLIController: ObservableObject {
     @Published private(set) var tunnelLogText = ""
     @Published private(set) var localMCPLogText = ""
     @Published private(set) var permissionMode: PermissionMode = .ask
+    @Published private(set) var allowedDirectories: [String] = []
     @Published var presentedError: String?
 
     private enum DefaultsKeys {
@@ -147,6 +148,7 @@ final class CLIController: ObservableObject {
                 onTermination: { [weak self] status in
                     guard let self else { return }
                     self.localMCPProcess = nil
+                    self.allowedDirectories = []
                     let wasRequested = self.localMCPStopRequested
                     self.localMCPStopRequested = false
                     self.localMCPState = (wasRequested || status == 0) ? .stopped : .failed("終了コード: \(status)")
@@ -155,6 +157,7 @@ final class CLIController: ObservableObject {
             localMCPProcess = process
             try process.start()
             localMCPState = .running(processIdentifier: process.processIdentifier)
+            resetAllowedDirectories(workingDirectory: configuration.workingDirectory)
             applyPermissionMode(to: process)
             applyAllowedDirectories(configuration.normalizedAllowedDirectories, to: process)
         } catch {
@@ -180,6 +183,7 @@ final class CLIController: ObservableObject {
         do {
             try process.send(command.commandLine)
             updatePermissionModeIfNeeded(for: command)
+            updateAllowedDirectoriesIfNeeded(for: command)
             appendLog("[local-mcp:stdin] \(command.commandLine)", to: .localMCP)
         } catch {
             present(error, source: .localMCP)
@@ -203,6 +207,7 @@ final class CLIController: ObservableObject {
             try target.process.send(normalized)
             if source == .localMCP {
                 updatePermissionModeIfNeeded(for: normalized)
+                updateAllowedDirectoriesIfNeeded(for: normalized)
             }
             appendLog("[\(target.logLabel):stdin] \(normalized)", to: source)
             return true
@@ -237,6 +242,7 @@ final class CLIController: ObservableObject {
         initializationProcess = nil
         tunnelProcess = nil
         localMCPProcess = nil
+        allowedDirectories = []
         tunnelState = .stopped
         localMCPState = .stopped
     }
@@ -261,6 +267,52 @@ final class CLIController: ObservableObject {
         default:
             break
         }
+    }
+
+    private func updateAllowedDirectoriesIfNeeded(for command: PermissionCommand) {
+        switch command {
+        case let .allow(directory):
+            addAllowedDirectory(directory)
+        case let .revoke(directory):
+            removeAllowedDirectory(directory)
+        case .ask, .yolo, .list, .status:
+            break
+        }
+    }
+
+    private func updateAllowedDirectoriesIfNeeded(for input: String) {
+        let normalized = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        let allowPrefix = "/permission allow "
+        let revokePrefix = "/permission revoke "
+
+        if normalized.hasPrefix(allowPrefix) {
+            addAllowedDirectory(String(normalized.dropFirst(allowPrefix.count)))
+        } else if normalized.hasPrefix(revokePrefix) {
+            removeAllowedDirectory(String(normalized.dropFirst(revokePrefix.count)))
+        }
+    }
+
+    private func resetAllowedDirectories(workingDirectory: String) {
+        allowedDirectories = []
+        addAllowedDirectory(workingDirectory)
+    }
+
+    private func addAllowedDirectory(_ directory: String) {
+        guard let normalized = normalizedDirectory(directory), !allowedDirectories.contains(normalized) else { return }
+        allowedDirectories.append(normalized)
+    }
+
+    private func removeAllowedDirectory(_ directory: String) {
+        guard let normalized = normalizedDirectory(directory) else { return }
+        allowedDirectories.removeAll { $0 == normalized }
+    }
+
+    private func normalizedDirectory(_ directory: String) -> String? {
+        let trimmed = directory.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return URL(fileURLWithPath: ShellPathResolver.expanded(trimmed), isDirectory: true)
+            .standardizedFileURL
+            .path
     }
 
     private func setPermissionMode(_ mode: PermissionMode) {
@@ -288,6 +340,7 @@ final class CLIController: ObservableObject {
             let command = PermissionCommand.allow(directory).commandLine
             do {
                 try process.send(command)
+                addAllowedDirectory(directory)
                 appendLog("[local-mcp:stdin] \(command)", to: .localMCP)
             } catch {
                 appendLog("[error] 自動Allowに失敗しました: \(directory) - \(error.localizedDescription)", to: .localMCP)

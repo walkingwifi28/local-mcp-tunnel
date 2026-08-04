@@ -156,8 +156,20 @@ struct ContentView: View {
             .labelsHidden()
             .frame(width: 150)
 
-            Button("Allow…") { chooseDirectory(for: .allow) }
-            Button("Revoke…") { chooseDirectory(for: .revoke) }
+            Button("Allow…") { chooseAllowedDirectory() }
+            Menu("Revoke") {
+                if revocableDirectories.isEmpty {
+                    Text("Revoke可能なディレクトリはありません")
+                } else {
+                    ForEach(revocableDirectories, id: \.self) { directory in
+                        Button(directory) {
+                            controller.sendPermission(.revoke(directory))
+                        }
+                        .help(directory)
+                    }
+                }
+            }
+            .menuStyle(.button)
             Button("List") { controller.sendPermission(.list) }
             Button("Status") { controller.sendPermission(.status) }
         }
@@ -217,24 +229,27 @@ struct ContentView: View {
         }
     }
 
-    private enum DirectoryAction {
-        case allow
-        case revoke
+    private var revocableDirectories: [String] {
+        let workingDirectory = URL(
+            fileURLWithPath: ShellPathResolver.expanded(settings.workingDirectory),
+            isDirectory: true
+        )
+        .standardizedFileURL
+        .path
+
+        return controller.allowedDirectories
+            .filter { $0 != workingDirectory }
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
 
-    private func chooseDirectory(for action: DirectoryAction) {
+    private func chooseAllowedDirectory() {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.directoryURL = URL(fileURLWithPath: ShellPathResolver.expanded(settings.workingDirectory))
         if panel.runModal() == .OK, let path = panel.url?.path {
-            switch action {
-            case .allow:
-                controller.sendPermission(.allow(path))
-            case .revoke:
-                controller.sendPermission(.revoke(path))
-            }
+            controller.sendPermission(.allow(path))
         }
     }
 }
