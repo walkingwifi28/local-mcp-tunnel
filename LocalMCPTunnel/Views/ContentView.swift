@@ -4,7 +4,6 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var controller: CLIController
-    @State private var showingYoloConfirmation = false
     @State private var selectedLogSource: CLIController.LogSource = .tunnel
     @State private var tunnelInput = ""
     @State private var localMCPInput = ""
@@ -27,18 +26,6 @@ struct ContentView: View {
             Button("OK", role: .cancel) { controller.presentedError = nil }
         } message: {
             Text(controller.presentedError ?? "")
-        }
-        .confirmationDialog(
-            "Yoloモードを有効にしますか？",
-            isPresented: $showingYoloConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Yoloを有効化", role: .destructive) {
-                controller.sendPermission(.yolo)
-            }
-            Button("キャンセル", role: .cancel) {}
-        } message: {
-            Text("確認なしで広い権限を許可する可能性があります。信頼できる環境でのみ使用してください。")
         }
     }
 
@@ -191,7 +178,7 @@ struct ContentView: View {
         case .ask:
             controller.sendPermission(.ask)
         case .yolo:
-            showingYoloConfirmation = true
+            controller.sendPermission(.yolo)
         }
     }
 
