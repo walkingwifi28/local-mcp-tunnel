@@ -13,10 +13,10 @@ struct SettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             Form {
-                Section("実行環境") {
+                Section("Runtime Environment") {
                     HStack {
                         TextField("Working Directory", text: $settings.workingDirectory)
-                        Button("選択") { chooseWorkingDirectory() }
+                        Button("Select") { chooseWorkingDirectory() }
                     }
                 }
                 
@@ -34,9 +34,9 @@ struct SettingsView: View {
                     TextField("MCP Command", text: $settings.mcpCommand)
                 }
 
-                Section("起動時に自動Allow") {
+                Section("Auto-allow on startup") {
                     if settings.allowedDirectories.isEmpty {
-                        Text("登録されているディレクトリはありません。")
+                        Text("No directories are registered.")
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(settings.allowedDirectories, id: \.self) { directory in
@@ -54,30 +54,30 @@ struct SettingsView: View {
                                     Image(systemName: "trash")
                                 }
                                 .buttonStyle(.borderless)
-                                .help("このディレクトリを削除")
+                                .help("Delete this directory")
                             }
                         }
                     }
 
                     HStack {
-                        Button("ディレクトリを追加…") {
+                        Button("Add Directory...") {
                             chooseAllowedDirectories()
                         }
                         if !settings.allowedDirectories.isEmpty {
-                            Button("すべて削除", role: .destructive) {
+                            Button("Delete All", role: .destructive) {
                                 settings.allowedDirectories.removeAll()
                             }
                         }
                         Spacer()
                     }
 
-                    Text("local-mcpのStart直後に、登録した各ディレクトリへ /permission allow を自動送信します。")
+                    Text("Immediately after starting local-mcp, it automatically sends `/permission allow` to each registered directory.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 
-                Section("アプリの更新") {
-                    LabeledContent("現在のバージョン") {
+                Section("Update Application") {
+                    LabeledContent("Current version") {
                         Text("v\(updateService.currentVersion)")
                             .foregroundStyle(.secondary)
                     }
@@ -111,21 +111,21 @@ struct SettingsView: View {
     private var updateStatus: some View {
         switch updateService.state {
         case .idle:
-            Text("GitHub Releaseから最新版を確認します。")
+            Text("Check for the latest version on GitHub Releases.")
                 .foregroundStyle(.secondary)
         case .checking:
-            Label("更新を確認中…", systemImage: "arrow.triangle.2.circlepath")
+            Label("Checking for updates...", systemImage: "arrow.triangle.2.circlepath")
                 .foregroundStyle(.secondary)
         case .upToDate(let latestVersion):
-            Label("最新バージョンです（v\(latestVersion)）。", systemImage: "checkmark.circle.fill")
+            Label("This is the latest version. v\(latestVersion)", systemImage: "checkmark.circle.fill")
                 .foregroundStyle(.green)
         case .updateAvailable(let release):
-            Label("v\(release.version) が利用できます。", systemImage: "arrow.down.circle.fill")
+            Label("v\(release.version) is available.", systemImage: "arrow.down.circle.fill")
         case .downloading(let release):
-            Label("v\(release.version) をダウンロード・検証中…", systemImage: "arrow.down.circle")
+            Label("v\(release.version) downloading and verifying...", systemImage: "arrow.down.circle")
                 .foregroundStyle(.secondary)
         case .installing(let release):
-            Label("v\(release.version) をインストール中。完了後に再起動します…", systemImage: "gearshape.2")
+            Label("v\(release.version) installing. It will restart upon completion...", systemImage: "gearshape.2")
                 .foregroundStyle(.secondary)
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle.fill")
@@ -138,20 +138,20 @@ struct SettingsView: View {
         Button(action: handleUpdateButton) {
             ZStack {
                 animatedButtonFace(isVisible: updateButtonState == .idle) {
-                    Text("更新を確認")
+                    Text("Check for updates")
                 }
 
                 animatedButtonFace(isVisible: updateButtonState == .checking) {
                     ProgressView()
                         .controlSize(.small)
                         .tint(.white)
-                    Text("確認中…")
+                    Text("Checking for updates...")
                 }
 
                 animatedButtonFace(isVisible: updateButtonState == .upToDate) {
                     Image(systemName: "checkmark")
                         .fontWeight(.semibold)
-                    Text("最新です")
+                    Text("Latest version")
                 }
 
                 animatedButtonFace(isVisible: updateButtonState == .updateAvailable) {
@@ -164,25 +164,25 @@ struct SettingsView: View {
                     ProgressView()
                         .controlSize(.small)
                         .tint(.white)
-                    Text("取得中…")
+                    Text("Fetching...")
                 }
 
                 animatedButtonFace(isVisible: updateButtonState == .installing) {
                     ProgressView()
                         .controlSize(.small)
                         .tint(.white)
-                    Text("更新中…")
+                    Text("Updating...")
                 }
 
                 animatedButtonFace(isVisible: updateButtonState == .failure) {
                     Image(systemName: "exclamationmark")
                         .fontWeight(.semibold)
-                    Text("再試行")
+                    Text("Retry")
                 }
             }
             .font(.system(size: 13, weight: .regular))
             .foregroundStyle(.white)
-            .frame(width: 136, height: 26)
+            .frame(width: 180, height: 26)
             .background(
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(updateButtonBackground)
@@ -197,9 +197,9 @@ struct SettingsView: View {
 
     private var updateAvailableButtonTitle: String {
         guard case .updateAvailable(let release) = updateService.state else {
-            return "更新する"
+            return "Update"
         }
-        return "v\(release.version)に更新"
+        return "Updated to v\(release.version)"
     }
 
     private var updateButtonBackground: Color {
@@ -214,22 +214,22 @@ struct SettingsView: View {
     private var updateButtonAccessibilityLabel: String {
         switch updateButtonState {
         case .idle:
-            return "アプリの更新を確認"
+            return "Check for app updates."
         case .checking:
-            return "アプリの更新を確認中"
+            return "Checking for app updates."
         case .upToDate:
-            return "アプリは最新です"
+            return "The app is up to date."
         case .updateAvailable:
             if case .updateAvailable(let release) = updateService.state {
-                return "バージョン\(release.version)へ更新"
+                return "Update to version \(release.version)."
             }
-            return "アプリを更新"
+            return "Update app."
         case .downloading:
-            return "アプリの更新をダウンロード中"
+            return "Downloading app update."
         case .installing:
-            return "アプリを更新中"
+            return "Updating app."
         case .failure:
-            return "アプリの更新に失敗しました。再試行"
+            return "Failed to update the app. Retry."
         }
     }
 
@@ -281,7 +281,7 @@ struct SettingsView: View {
     private var saveFooter: some View {
         HStack(spacing: 12) {
             if let saveMessage = settings.saveMessage,
-               !saveMessage.hasPrefix("設定を保存しました") {
+               !saveMessage.hasPrefix("Settings saved.") {
                 Text(saveMessage)
                     .font(.caption)
                     .foregroundStyle(.red)
@@ -300,26 +300,26 @@ struct SettingsView: View {
         Button(action: saveSettings) {
             ZStack {
                 saveButtonFace(for: .idle) {
-                    Text("保存")
+                    Text("Save")
                 }
 
                 saveButtonFace(for: .saving) {
                     ProgressView()
                         .controlSize(.small)
                         .tint(.white)
-                    Text("保存中…")
+                    Text("Saving...")
                 }
 
                 saveButtonFace(for: .success) {
                     Image(systemName: "checkmark")
                         .fontWeight(.semibold)
-                    Text("保存しました")
+                    Text("Saved")
                 }
 
                 saveButtonFace(for: .failure) {
                     Image(systemName: "exclamationmark")
                         .fontWeight(.semibold)
-                    Text("再試行")
+                    Text("Retry")
                 }
             }
             .font(.system(size: 13, weight: .regular))
@@ -415,8 +415,8 @@ struct SettingsView: View {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
-        panel.prompt = "追加"
-        panel.message = "local-mcp起動時に自動でAllowするディレクトリを選択してください。"
+        panel.prompt = "Add"
+        panel.message = "Please select the directories to automatically allow when starting local-mcp."
         panel.directoryURL = URL(fileURLWithPath: ShellPathResolver.expanded(settings.workingDirectory))
         if panel.runModal() == .OK {
             settings.addAllowedDirectories(panel.urls.map(\.path))
@@ -443,13 +443,13 @@ struct SettingsView: View {
         var accessibilityLabel: String {
             switch self {
             case .idle:
-                return "設定を保存"
+                return "Save settings."
             case .saving:
-                return "設定を保存中"
+                return "Saving settings."
             case .success:
-                return "設定を保存しました"
+                return "Saved settings."
             case .failure:
-                return "設定の保存に失敗しました。再試行"
+                return "Failed to save settings. Retry."
             }
         }
     }

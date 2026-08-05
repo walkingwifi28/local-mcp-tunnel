@@ -71,7 +71,7 @@ final class CLIController: ObservableObject {
                 onTermination: { [weak self] status in
                     guard let self else { return }
                     self.initializationProcess = nil
-                    self.tunnelState = status == 0 ? .stopped : .failed("終了コード: \(status)")
+                    self.tunnelState = status == 0 ? .stopped : .failed("Exit code: \(status)")
                 }
             )
             initializationProcess = process
@@ -106,7 +106,7 @@ final class CLIController: ObservableObject {
                     self.tunnelProcess = nil
                     let wasRequested = self.tunnelStopRequested
                     self.tunnelStopRequested = false
-                    self.tunnelState = (wasRequested || status == 0) ? .stopped : .failed("終了コード: \(status)")
+                    self.tunnelState = (wasRequested || status == 0) ? .stopped : .failed("Exit code: \(status)")
                 }
             )
             tunnelProcess = process
@@ -123,7 +123,7 @@ final class CLIController: ObservableObject {
         guard let tunnelProcess else { return }
         tunnelStopRequested = true
         tunnelState = .stopping
-        appendLog("[tunnel] 停止要求を送信しました。", to: .tunnel)
+        appendLog("[tunnel] Stop request sent.", to: .tunnel)
         tunnelProcess.stop()
     }
 
@@ -151,7 +151,7 @@ final class CLIController: ObservableObject {
                     self.allowedDirectories = []
                     let wasRequested = self.localMCPStopRequested
                     self.localMCPStopRequested = false
-                    self.localMCPState = (wasRequested || status == 0) ? .stopped : .failed("終了コード: \(status)")
+                    self.localMCPState = (wasRequested || status == 0) ? .stopped : .failed("Exit code: \(status)")
                 }
             )
             localMCPProcess = process
@@ -171,13 +171,13 @@ final class CLIController: ObservableObject {
         guard let localMCPProcess else { return }
         localMCPStopRequested = true
         localMCPState = .stopping
-        appendLog("[local-mcp] 停止要求を送信しました。", to: .localMCP)
+        appendLog("[local-mcp] Stop request sent.", to: .localMCP)
         localMCPProcess.stop()
     }
 
     func sendPermission(_ command: PermissionCommand) {
         guard let process = localMCPProcess, process.isRunning else {
-            presentedError = "先にlocal-mcpを起動してください。"
+            presentedError = "Please start local-mcp first."
             return
         }
         do {
@@ -199,7 +199,7 @@ final class CLIController: ObservableObject {
         let normalized = input.trimmingCharacters(in: .newlines)
         guard !normalized.isEmpty else { return false }
         guard let target = activeInputTarget(for: source) else {
-            presentedError = "\(source.label)が起動していません。"
+            presentedError = "\(source.label) is not running."
             return false
         }
 
@@ -322,20 +322,20 @@ final class CLIController: ObservableObject {
 
     private func applyPermissionMode(to process: ManagedProcess) {
         let command: PermissionCommand = permissionMode == .yolo ? .yolo : .ask
-        appendLog("[local-mcp] 保存済みのPermission Mode（\(permissionMode.label)）を適用します。", to: .localMCP)
+        appendLog("[local-mcp] Applying saved Permission Mode (\(permissionMode.label)).", to: .localMCP)
         do {
             try process.send(command.commandLine)
             appendLog("[local-mcp:stdin] \(command.commandLine)", to: .localMCP)
         } catch {
-            appendLog("[error] Permission Modeの自動適用に失敗しました: \(error.localizedDescription)", to: .localMCP)
-            presentedError = "Permission Modeの自動適用に失敗しました。"
+            appendLog("[error] Failed to automatically apply Permission Mode: \(error.localizedDescription)", to: .localMCP)
+            presentedError = "Failed to automatically apply Permission Mode."
         }
     }
 
     private func applyAllowedDirectories(_ directories: [String], to process: ManagedProcess) {
         guard !directories.isEmpty else { return }
 
-        appendLog("[local-mcp] 起動時の自動Allowを適用します（\(directories.count)件）。", to: .localMCP)
+        appendLog("[local-mcp] Applying automatic allow at startup (\(directories.count) items).", to: .localMCP)
         for directory in directories {
             let command = PermissionCommand.allow(directory).commandLine
             do {
@@ -343,8 +343,8 @@ final class CLIController: ObservableObject {
                 addAllowedDirectory(directory)
                 appendLog("[local-mcp:stdin] \(command)", to: .localMCP)
             } catch {
-                appendLog("[error] 自動Allowに失敗しました: \(directory) - \(error.localizedDescription)", to: .localMCP)
-                presentedError = "起動時の自動Allowに失敗しました: \(directory)"
+                appendLog("[error] Failed to auto-allow: \(directory) - \(error.localizedDescription)", to: .localMCP)
+                presentedError = "Failed to auto-allow at startup: \(directory)"
                 break
             }
         }
@@ -456,7 +456,7 @@ private final class ManagedProcess {
             self.stopFallback?.cancel()
             self.closePipes()
             Task { @MainActor in
-                self.onOutput("[\(self.label)] 終了しました (code: \(process.terminationStatus))")
+                self.onOutput("[\(self.label)] Finished (code: \(process.terminationStatus))")
                 self.onTermination(process.terminationStatus)
             }
         }
@@ -523,11 +523,11 @@ private final class ManagedProcess {
         var errorDescription: String? {
             switch self {
             case let .invalidWorkingDirectory(path):
-                return "作業ディレクトリが存在しません: \(path)"
+                return "Working directory does not exist: \(path)"
             case .notRunning:
-                return "プロセスが起動していません。"
+                return "The process is not running."
             case .encodingFailed:
-                return "コマンドをUTF-8へ変換できませんでした。"
+                return "Failed to convert the command to UTF-8."
             }
         }
     }

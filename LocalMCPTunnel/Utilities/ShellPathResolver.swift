@@ -75,11 +75,11 @@ enum ShellPathResolver {
         var errorDescription: String? {
             switch self {
             case .emptyExecutable:
-                return "実行ファイルが設定されていません。"
+                return "The executable file has not been set."
             case let .commandNotFound(command):
-                return "コマンドが見つかりません: \(command)"
+                return "Command not found: \(command)"
             case let .notExecutable(path):
-                return "実行可能なファイルではありません: \(path)"
+                return "Not an executable file: \(path)"
             }
         }
     }

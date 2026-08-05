@@ -320,31 +320,31 @@ final class AppUpdateService: ObservableObject {
 
     private static func userMessage(for error: Error) -> String {
         guard let updateError = error as? UpdateError else {
-            return "更新処理に失敗しました: \(error.localizedDescription)"
+            return "The update process failed: \(error.localizedDescription)"
         }
 
         switch updateError {
         case .releaseNotFound:
-            return "公開済みの更新が見つかりませんでした。"
+            return "No published update was found."
         case .releaseAssetsMissing:
-            return "最新版のarm64用ZIPまたはSHA-256ファイルが見つかりません。"
+            return "The latest arm64 ZIP or SHA-256 file could not be found."
         case .invalidChecksumFile:
-            return "更新ファイルのSHA-256情報を読み取れませんでした。"
+            return "The SHA-256 information for the update file could not be read."
         case .checksumMismatch:
-            return "更新ファイルのSHA-256が一致しないため、インストールを中止しました。"
+            return "The update file SHA-256 did not match, so installation was canceled."
         case .appBundleMissing, .invalidAppBundle, .versionMismatch:
-            return "ダウンロードした更新ファイルが正しくありません。"
+            return "The downloaded update file is invalid."
         case .installLocationNotWritable:
-            return "現在のアプリ保存先へ書き込めません。アプリをApplicationsフォルダへ移動して再試行してください。"
+            return "The current application location is not writable. Move the app to the Applications folder and try again."
         case .httpError(let statusCode, let message):
             if let message, !message.isEmpty {
-                return "更新の確認に失敗しました（HTTP \(statusCode): \(message)）。"
+                return "Failed to check for updates (HTTP \(statusCode): \(message))."
             }
-            return "更新の確認に失敗しました（HTTP \(statusCode)）。"
+            return "Failed to check for updates (HTTP \(statusCode))."
         case .invalidResponse:
-            return "更新サーバーから正しい応答を受け取れませんでした。"
+            return "The update server returned an invalid response."
         case .commandFailed(let message):
-            return "更新ファイルの検証に失敗しました: \(message)"
+            return "Failed to verify the update file: \(message)"
         }
     }
 

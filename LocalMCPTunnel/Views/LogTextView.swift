@@ -117,7 +117,7 @@ struct LogTextView: NSViewRepresentable {
 
             let selection = textView.selectedRange()
             if selection.length == 0 && selection.location < editableStart {
-                // 過去ログは選択可能。入力開始時のみ末尾へ移動するため、ここでは位置を維持する。
+                // Previous logs remain selectable. Preserve the current position here and move to the end only when input begins.
             }
         }
     }

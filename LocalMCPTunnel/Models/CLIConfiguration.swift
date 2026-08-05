@@ -26,16 +26,16 @@ struct CLIConfiguration: Equatable {
 
     var validationMessage: String? {
         if profileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "Profile Nameを入力してください。"
+            return "Please enter a Profile Name."
         }
         if tunnelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "Tunnel IDを入力してください。"
+            return "Please enter a Tunnel ID."
         }
         if sessionID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "Session IDを入力してください。"
+            return "Please enter a Session ID."
         }
         if controlPlaneAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "CONTROL_PLANE_API_KEYを設定してください。"
+            return "Please set CONTROL_PLANE_API_KEY."
         }
         return nil
     }
@@ -126,10 +126,10 @@ final class AppSettings: ObservableObject {
 
         do {
             try keychain.save(controlPlaneAPIKey)
-            saveMessage = "設定を保存しました。"
+            saveMessage = "Settings have been saved."
             return true
         } catch {
-            saveMessage = "APIキーの保存に失敗しました: \(error.localizedDescription)"
+            saveMessage = "Failed to save API key: \(error.localizedDescription)"
             return false
         }
     }

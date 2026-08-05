@@ -10,15 +10,15 @@ enum ProcessState: Equatable {
     var label: String {
         switch self {
         case .stopped:
-            return "停止中"
+            return "Stopped"
         case .starting:
-            return "起動中"
+            return "Starting up"
         case let .running(processIdentifier):
-            return "実行中 (PID: \(processIdentifier))"
+            return "Running (PID: \(processIdentifier))"
         case .stopping:
-            return "停止処理中"
+            return "Stopping"
         case .failed:
-            return "エラー"
+            return "Error"
         }
     }
 

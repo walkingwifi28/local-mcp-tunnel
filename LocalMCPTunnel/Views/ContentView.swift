@@ -19,7 +19,7 @@ struct ContentView: View {
         }
         .padding(18)
         .frame(minWidth: 880, minHeight: 700)
-        .alert("エラー", isPresented: Binding(
+        .alert("Error", isPresented: Binding(
             get: { controller.presentedError != nil },
             set: { if !$0 { controller.presentedError = nil } }
         )) {
@@ -34,12 +34,10 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Local MCP Tunnel")
                     .font(.title2.bold())
-                Text("tunnel-clientとlocal-mcpをまとめて操作します")
-                    .foregroundStyle(.secondary)
             }
             Spacer()
             SettingsLink {
-                Label("設定", systemImage: "gearshape")
+                Label("Settings", systemImage: "gearshape")
             }
         }
     }
@@ -48,8 +46,8 @@ struct ContentView: View {
         GroupBox("Tunnel Client") {
             VStack(alignment: .leading, spacing: 12) {
                 statusRow(controller.tunnelState)
-                LabeledContent("Profile", value: settings.profileName.isEmpty ? "未設定" : settings.profileName)
-                LabeledContent("Tunnel ID", value: settings.tunnelID.isEmpty ? "未設定" : settings.tunnelID)
+                LabeledContent("Profile", value: settings.profileName.isEmpty ? "None" : settings.profileName)
+                LabeledContent("Tunnel ID", value: settings.tunnelID.isEmpty ? "None" : settings.tunnelID)
                 HStack {
                     Button("Init") {
                         settings.save()
@@ -58,7 +56,7 @@ struct ContentView: View {
                     .disabled(controller.tunnelState.isBusy || controller.tunnelState.isRunning)
 
                     if controller.tunnelState.isRunning {
-                        Button("停止", role: .destructive) { controller.stopTunnel() }
+                        Button("Stop", role: .destructive) { controller.stopTunnel() }
                     } else {
                         Button("Run") {
                             settings.save()
@@ -78,13 +76,13 @@ struct ContentView: View {
         GroupBox("local-mcp") {
             VStack(alignment: .leading, spacing: 12) {
                 statusRow(controller.localMCPState)
-                LabeledContent("Session", value: settings.sessionID.isEmpty ? "未設定" : settings.sessionID)
+                LabeledContent("Session", value: settings.sessionID.isEmpty ? "None" : settings.sessionID)
                 LabeledContent("Working Dir", value: settings.workingDirectory)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 HStack {
                     if controller.localMCPState.isRunning {
-                        Button("停止", role: .destructive) { controller.stopLocalMCP() }
+                        Button("Stop", role: .destructive) { controller.stopLocalMCP() }
                     } else {
                         Button("Start") {
                             settings.save()
@@ -107,7 +105,7 @@ struct ContentView: View {
                     Text("Log")
                         .font(.headline)
 
-                    Picker("ログ種別", selection: $selectedLogSource) {
+                    Picker("Log Type", selection: $selectedLogSource) {
                         ForEach(CLIController.LogSource.allCases) { source in
                             Text(source.label).tag(source)
                         }
@@ -122,11 +120,11 @@ struct ContentView: View {
 
                     Spacer()
 
-                    Button("コピー") {
+                    Button("Copy") {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(selectedLogText, forType: .string)
                     }
-                    Button("クリア") {
+                    Button("Clear") {
                         controller.clearLog(for: selectedLogSource)
                     }
                 }
@@ -159,7 +157,7 @@ struct ContentView: View {
             Button("Allow…") { chooseAllowedDirectory() }
             Menu("Revoke") {
                 if revocableDirectories.isEmpty {
-                    Text("Revoke可能なディレクトリはありません")
+                    Text("No directories are available to revoke.")
                 } else {
                     ForEach(revocableDirectories, id: \.self) { directory in
                         Button(directory) {
