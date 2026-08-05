@@ -196,7 +196,7 @@ struct SettingsView: View {
             .animation(saveAnimation, value: updateButtonState)
         }
         .buttonStyle(.plain)
-        .disabled(updateService.isBusy || updateButtonState == .upToDate)
+        .disabled(updateService.isBusy)
         .accessibilityLabel(updateButtonAccessibilityLabel)
     }
 
