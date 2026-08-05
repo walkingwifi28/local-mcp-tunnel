@@ -284,7 +284,7 @@ struct SettingsView: View {
                !saveMessage.hasPrefix("Settings saved.") {
                 Text(saveMessage)
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(saveMessage == "Settings have been saved." ? Color.white : Color.red)
                     .lineLimit(1)
             }
 
@@ -381,16 +381,17 @@ struct SettingsView: View {
             saveButtonState = .saving
         }
 
-        let didSave = settings.save()
+        let saveResult = settings.save()
         saveResetTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(420))
+            try? await Task.sleep(for: .milliseconds(500))
             guard !Task.isCancelled else { return }
 
             withAnimation(saveAnimation) {
-                saveButtonState = didSave ? .success : .failure
+                saveButtonState = saveResult.didSave ? .success : .failure
             }
+            settings.showSaveMessage(for: saveResult)
 
-            try? await Task.sleep(for: .milliseconds(didSave ? 1000 : 2200))
+            try? await Task.sleep(for: .milliseconds(saveResult.didSave ? 3000 : 3000))
             guard !Task.isCancelled else { return }
 
             withAnimation(saveAnimation) {

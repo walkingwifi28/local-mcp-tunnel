@@ -43,6 +43,16 @@ struct CLIConfiguration: Equatable {
 
 @MainActor
 final class AppSettings: ObservableObject {
+    enum SaveResult {
+        case success
+        case failure(String)
+
+        var didSave: Bool {
+            if case .success = self { return true }
+            return false
+        }
+    }
+
     @Published var profileName: String
     @Published var tunnelID: String
     @Published var sessionID: String
@@ -69,6 +79,7 @@ final class AppSettings: ObservableObject {
 
     private let defaults: UserDefaults
     private let keychain: KeychainStore
+    private var saveMessageClearTask: Task<Void, Never>?
 
     init(defaults: UserDefaults = .standard, keychain: KeychainStore = .shared) {
         self.defaults = defaults
@@ -111,7 +122,7 @@ final class AppSettings: ObservableObject {
     }
 
     @discardableResult
-    func save() -> Bool {
+    func save() -> SaveResult {
         allowedDirectories = Self.normalizedDirectories(allowedDirectories)
 
         defaults.set(profileName, forKey: Keys.profileName)
@@ -126,16 +137,37 @@ final class AppSettings: ObservableObject {
 
         do {
             try keychain.save(controlPlaneAPIKey)
-            saveMessage = "Settings have been saved."
-            return true
+            return .success
         } catch {
-            saveMessage = "Failed to save API key: \(error.localizedDescription)"
-            return false
+            return .failure(error.localizedDescription)
+        }
+    }
+
+    func showSaveMessage(for result: SaveResult) {
+        switch result {
+        case .success:
+            showSaveMessage("Settings have been saved.")
+        case .failure(let message):
+            showSaveMessage("Failed to save API key: \(message)")
         }
     }
 
     func clearSaveMessage() {
+        saveMessageClearTask?.cancel()
+        saveMessageClearTask = nil
         saveMessage = nil
+    }
+
+    private func showSaveMessage(_ message: String) {
+        saveMessageClearTask?.cancel()
+        saveMessage = message
+
+        saveMessageClearTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            self?.saveMessage = nil
+            self?.saveMessageClearTask = nil
+        }
     }
 
     private static func normalizedDirectories(_ directories: [String]) -> [String] {
