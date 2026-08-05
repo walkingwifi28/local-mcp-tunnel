@@ -144,6 +144,7 @@ final class CLIController: ObservableObject {
                 environment: environment,
                 workingDirectory: configuration.workingDirectory,
                 label: "local-mcp",
+                streamNameOverride: "stdout",
                 onOutput: { [weak self] line in self?.appendLog(line, to: .localMCP) },
                 onTermination: { [weak self] status in
                     guard let self else { return }
@@ -416,6 +417,7 @@ private final class ManagedProcess {
     private let stdoutPipe = Pipe()
     private let stderrPipe = Pipe()
     private let label: String
+    private let streamNameOverride: String?
     private let onOutput: @MainActor (String) -> Void
     private let onTermination: @MainActor (Int32) -> Void
     private var stopFallback: DispatchWorkItem?
@@ -429,10 +431,12 @@ private final class ManagedProcess {
         environment: [String: String],
         workingDirectory: String,
         label: String,
+        streamNameOverride: String? = nil,
         onOutput: @escaping @MainActor (String) -> Void,
         onTermination: @escaping @MainActor (Int32) -> Void
     ) throws {
         self.label = label
+        self.streamNameOverride = streamNameOverride
         self.onOutput = onOutput
         self.onTermination = onTermination
         process.executableURL = executable
@@ -500,8 +504,9 @@ private final class ManagedProcess {
             let text = String(decoding: data, as: UTF8.self)
             let lines = text.split(separator: "\n", omittingEmptySubsequences: false)
             for line in lines where !line.isEmpty {
+                let outputLabel = "\(self.label):\(self.streamNameOverride ?? stream)"
                 Task { @MainActor in
-                    self.onOutput("[\(self.label):\(stream)] \(line)")
+                    self.onOutput("[\(outputLabel)] \(line)")
                 }
             }
         }
