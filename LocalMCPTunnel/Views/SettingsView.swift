@@ -20,12 +20,24 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section("Tunnel Client") {
+                Section {
                     TextField("Profile Name", text: $settings.profileName)
                     TextField("Tunnel ID", text: $settings.tunnelID)
                     TextField("Sample Name", text: $settings.sampleName)
                     TextField("tunnel-client", text: $settings.tunnelClientExecutable)
                     SecureField("CONTROL_PLANE_API_KEY", text: $settings.controlPlaneAPIKey)
+                } header: {
+                    HStack {
+                        Text("Tunnel Client")
+                        Spacer()
+                        Link(destination: URL(string: "https://platform.openai.com/")!) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Open OpenAI Platform")
+                        .accessibilityLabel("Open OpenAI Platform in the browser")
+                    }
                 }
 
                 Section("local-mcp") {
