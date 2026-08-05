@@ -13,7 +13,14 @@ struct SettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             Form {
-                Section("Tunnel") {
+                Section("実行環境") {
+                    HStack {
+                        TextField("Working Directory", text: $settings.workingDirectory)
+                        Button("選択") { chooseWorkingDirectory() }
+                    }
+                }
+                
+                Section("Tunnel Client") {
                     TextField("Profile Name", text: $settings.profileName)
                     TextField("Tunnel ID", text: $settings.tunnelID)
                     TextField("Sample Name", text: $settings.sampleName)
@@ -68,13 +75,17 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                
+                Section("アプリの更新") {
+                    LabeledContent("現在のバージョン") {
+                        Text("v\(updateService.currentVersion)")
+                            .foregroundStyle(.secondary)
+                    }
 
-                updateSection
-
-                Section("実行環境") {
-                    HStack {
-                        TextField("Working Directory", text: $settings.workingDirectory)
-                        Button("選択") { chooseWorkingDirectory() }
+                    HStack(alignment: .center, spacing: 12) {
+                        updateStatus
+                        Spacer(minLength: 12)
+                        updateButton
                     }
                 }
             }
@@ -93,22 +104,6 @@ struct SettingsView: View {
         .onDisappear {
             saveResetTask?.cancel()
             updateButtonResetTask?.cancel()
-        }
-    }
-
-    @ViewBuilder
-    private var updateSection: some View {
-        Section("アプリの更新") {
-            LabeledContent("現在のバージョン") {
-                Text("v\(updateService.currentVersion)")
-                    .foregroundStyle(.secondary)
-            }
-
-            HStack(alignment: .center, spacing: 12) {
-                updateStatus
-                Spacer(minLength: 12)
-                updateButton
-            }
         }
     }
 
