@@ -46,8 +46,8 @@ struct ContentView: View {
         GroupBox("Tunnel Client") {
             VStack(alignment: .leading, spacing: 12) {
                 statusRow(controller.tunnelState)
-                LabeledContent("Profile", value: settings.profileName.isEmpty ? "None" : settings.profileName)
-                LabeledContent("Tunnel ID", value: settings.tunnelID.isEmpty ? "None" : settings.tunnelID)
+                LabeledContent("Profile :", value: settings.profileName.isEmpty ? "None" : settings.profileName)
+                LabeledContent("Tunnel ID :", value: settings.tunnelID.isEmpty ? "None" : settings.tunnelID)
                 HStack {
                     Button("Init") {
                         settings.save()
@@ -76,8 +76,8 @@ struct ContentView: View {
         GroupBox("local-mcp") {
             VStack(alignment: .leading, spacing: 12) {
                 statusRow(controller.localMCPState)
-                LabeledContent("Session", value: settings.sessionID.isEmpty ? "None" : settings.sessionID)
-                LabeledContent("Working Dir", value: settings.workingDirectory)
+                LabeledContent("Session :", value: settings.sessionID.isEmpty ? "None" : settings.sessionID)
+                LabeledContent("Working Dir :", value: settings.workingDirectory)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 HStack {
